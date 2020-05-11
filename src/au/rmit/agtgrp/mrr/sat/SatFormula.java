@@ -233,6 +233,8 @@ public class SatFormula implements Iterable<int[]>, Serializable {
 		if (file.exists())
 			file.delete();
 		
+		file.getParentFile().mkdirs();
+
 		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
 		 	
 		if (comment != null) {

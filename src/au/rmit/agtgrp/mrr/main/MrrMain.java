@@ -256,116 +256,115 @@ public class MrrMain {
 
 	public static class MrrOptions {
 
-	@Option(name = "--help", usage = "print this help message", help = true, metaVar = "OPT")
-	public boolean help;
+		@Option(name = "--help", usage = "print this help message", help = true, metaVar = "OPT")
+		public boolean help;
 
-	@Option(name = "--verbose", usage = "verbose", metaVar = "OPT")
-	public boolean verbose;
+		@Option(name = "--verbose", usage = "verbose", metaVar = "OPT")
+		public boolean verbose;
 
-	@Option(name = "--domain", usage = "domain file", required = true)
-	public File domainFile;
+		@Option(name = "--domain", usage = "domain file", required = true)
+		public File domainFile;
 
-	@Option(name = "--problem", usage = "problem file", required = true)
-	public File problemFile;
+		@Option(name = "--problem", usage = "problem file", required = true)
+		public File problemFile;
 
-	@Option(name = "--plan", usage = "plan file", required = true)
-	public File planFile;
+		@Option(name = "--plan", usage = "plan file", required = true)
+		public File planFile;
 
-	@Option(name = "--pop", usage = "out file")
-	public File popFile = new File("optimised.pop");
+		@Option(name = "--pop", usage = "out file")
+		public File popFile = new File("optimised.pop");
 
-	@Option(name = "--wcnf", usage = "output wcnf file")
-	public File wcnfFile = new File("encoded.wcnf");
+		@Option(name = "--wcnf", usage = "output wcnf file")
+		public File wcnfFile = new File("encoded.wcnf");
 
-	@Option(name = "--model", usage = "model file")
-	public File model = null;
+		@Option(name = "--model", usage = "model file")
+		public File model = null;
 
-	@Option(name = "--enc", usage = "optimisation encoding")
-	public OptAlgorithm algorithm = null;
+		@Option(name = "--enc", usage = "optimisation encoding")
+		public OptAlgorithm algorithm = null;
 
-	@Option(name = "--action", usage = "encode to MaxSAT or decode solution to POP", required = true)
-	public Action action = null;
+		@Option(name = "--action", usage = "encode to MaxSAT or decode solution to POP", required = true)
+		public Action action = null;
 
-	private Plan plan;
-	
-	public void parse(String[] args) {
-		ParserProperties properties = ParserProperties.defaults();
-		properties.withOptionSorter(null);
-
-		CmdLineParser optionParser = new CmdLineParser(this, properties);
-
-		StringWriter usage = new StringWriter();
-		optionParser.printUsage(usage, null);
-
-		List<String> optionStrs = new ArrayList<String>();
-		for (String arg : args)
-			optionStrs.add(arg);
-
-		try {
-			optionParser.parseArgument(optionStrs);
-
-		} catch (CmdLineException e) {
-			System.err.println(e.getMessage());
-			System.err.println(usage);
-			System.exit(1);
-		}
-
-		// print help message if requested
-		if (this.help) {
-			System.out.println(usage);
-			System.exit(0);
-		}
-
-		// load pddl from supplied files
-		loadPlan();
-	}
-
-	private void loadPlan() {
-
-		PddlParser pddlParser = new PddlParser(true, false);
-
-		try {
-			pddlParser.parse(domainFile, problemFile);
-			String planFileName = planFile.getName();
-			if (planFileName.endsWith(".lama") || planFileName.endsWith(".ss") || planFileName.endsWith(".bfws")) {
-				pddlParser.parseFDPlan(planFile);
-			}
-			else if (planFileName.endsWith(".m")) {
-				pddlParser.parseMadagascarPlan(planFile);
-			}
-			else {
-				throw new IllegalArgumentException("Unknown plan type: " + planFile);
-			}
-			
-			
-		}  catch (PddlParserException e) {
-			System.err.println(e.getMessage());
-			System.exit(1);
-		} catch (Exception e) {
-			System.err.println("Unexpected error while parsing PDDL");
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		// check that the plan is valid
-		PlanResult pr = pddlParser.getProblem().validatePlan(pddlParser.getPlan());
-		if (!pr.isValid) {
-			System.err.println("Input plan is not valid");
-			System.err.println(pr.message);
-			System.exit(1);
-		}
+		private Plan plan;
 		
-		plan = pddlParser.getPlan();		
-	}
-	
-	public Plan getPlan() {
-		if (plan == null)
+		public void parse(String[] args) {
+			ParserProperties properties = ParserProperties.defaults();
+			properties.withOptionSorter(null);
+
+			CmdLineParser optionParser = new CmdLineParser(this, properties);
+
+			StringWriter usage = new StringWriter();
+			optionParser.printUsage(usage, null);
+
+			List<String> optionStrs = new ArrayList<String>();
+			for (String arg : args)
+				optionStrs.add(arg);
+
+			try {
+				optionParser.parseArgument(optionStrs);
+
+			} catch (CmdLineException e) {
+				System.err.println(e.getMessage());
+				System.err.println(usage);
+				System.exit(1);
+			}
+
+			if (this.algorithm != null && AsymmetryOpt.STRUCT.equals(this.algorithm.asymm)) {
+				System.out.println("Encoder " + this.algorithm + " is not implemented yet");
+				System.exit(1);
+			}
+
+			// print help message if requested
+			if (this.help) {
+				System.out.println(usage);
+				System.exit(0);
+			}
+
+			// load pddl from supplied files
 			loadPlan();
-		return plan;
-	}
+		}
 
+		private void loadPlan() {
+
+			PddlParser pddlParser = new PddlParser(true, false);
+
+			try {
+				pddlParser.parse(domainFile, problemFile);
+				String planFileName = planFile.getName();
+				if (planFileName.endsWith(".m")) {
+					System.out.println("Parsing plan file as a Madagascar parallel plan");
+					pddlParser.parseMadagascarPlan(planFile);
+				}
+				else {
+					pddlParser.parseFDPlan(planFile);
+				}
+				
+				
+			}  catch (PddlParserException e) {
+				System.err.println(e.getMessage());
+				System.exit(1);
+			} catch (Exception e) {
+				System.err.println("Unexpected error while parsing PDDL");
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			// check that the plan is valid
+			PlanResult pr = pddlParser.getProblem().validatePlan(pddlParser.getPlan());
+			if (!pr.isValid) {
+				System.err.println("Input plan is not valid");
+				System.err.println(pr.message);
+				System.exit(1);
+			}
+			
+			plan = pddlParser.getPlan();		
+		}
 		
-
+		public Plan getPlan() {
+			if (plan == null)
+				loadPlan();
+			return plan;
+		}
 	}
-
 }
