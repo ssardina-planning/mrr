@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 # MRR - Minimum Reinstantiated Reorder
 #
 # Copyright (C) 2020 
