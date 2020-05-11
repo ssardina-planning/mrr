@@ -1,7 +1,7 @@
 /*******************************************************************************
- * MKTR - Minimal k-Treewidth Relaxation
+ * MRR - Minimum Reinstantiated Reorder
  *
- * Copyright (C) 2018 
+ * Copyright (C) 2020 
  * Max Waters (max.waters@rmit.edu.au)
  * RMIT University, Melbourne VIC 3000
  *
